@@ -23,11 +23,17 @@ import {
 
 const App = () => {
   const [step, setStep] = useState('hero'); // hero, input, loading, results, contact, success
+  const [auditMode, setAuditMode] = useState('website'); // website | idea
   const [formData, setFormData] = useState({
     url: '',
     businessType: '',
     revenue: '',
-    challenge: ''
+    challenge: '',
+    ideaDescription: '',
+    targetMarket: '',
+    targetAudience: '',
+    priceRange: '',
+    productCategory: '',
   });
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysisResult, setAnalysisResult] = useState(null);
@@ -42,7 +48,7 @@ const App = () => {
   };
 
   // --- API Integration (Gemini) ---
-  const callGemini = async (query, retryCount = 0, useSearch = true, modelIndex = 0) => {
+  const callGemini = async (query, mode = 'website', retryCount = 0, useSearch = true, modelIndex = 0) => {
     const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || "").trim();
     if (!apiKey) {
       throw new Error("Missing API key. Set VITE_GEMINI_API_KEY in .env and restart Vite.");
@@ -62,8 +68,7 @@ const App = () => {
     Provide precise insights based on the business URL provided. You should actively look up the provided URL and verify exactly what the company sells (e.g., natural supplements vs. solar panels) before generating the report. Ensure competitor and market data is highly accurate based on the live URL context.
     Return only valid JSON matching the provided schema.`;
 
-    // Strictly structured schema ensuring all nested objects have required fields
-    const schema = {
+    const websiteSchema = {
       type: "OBJECT",
       properties: {
         overview: { type: "STRING", description: "Short, precise executive summary of what the business does and its market positioning." },
@@ -95,23 +100,23 @@ const App = () => {
           },
           required: ["strengths", "improvements"]
         },
-        seo: { 
-          type: "ARRAY", 
+        seo: {
+          type: "ARRAY",
           items: { type: "STRING" }
         },
         sco: { type: "STRING" },
         campaign: { type: "STRING" },
-        competitors: { 
-          type: "ARRAY", 
+        competitors: {
+          type: "ARRAY",
           items: { type: "STRING" }
         },
         competitorAds: {
           type: "OBJECT",
           properties: {
             competitorName: { type: "STRING" },
-            adDescription: { type: "STRING", description: "Description of their best performing Meta/Facebook ad creative and copy" },
-            whyItWorks: { type: "STRING", description: "Strategic breakdown of why this ad converts" },
-            landingPageAnalysis: { type: "STRING", description: "Analysis of the ad's destination link/landing page and why it successfully converts the ad traffic." }
+            adDescription: { type: "STRING" },
+            whyItWorks: { type: "STRING" },
+            landingPageAnalysis: { type: "STRING" }
           },
           required: ["competitorName", "adDescription", "whyItWorks", "landingPageAnalysis"]
         },
@@ -121,12 +126,279 @@ const App = () => {
       required: ["overview", "architecture", "seo", "sco", "campaign", "competitors", "competitorAds", "revenuePotential", "systemStatus"]
     };
 
+    const ideaSchema = {
+      type: "OBJECT",
+      properties: {
+        reportTitle: { type: "STRING" },
+        ideaName: { type: "STRING" },
+        ideaSummary: {
+          type: "OBJECT",
+          properties: {
+            oneLiner: { type: "STRING" },
+            coreProblem: { type: "STRING" },
+            targetUser: { type: "STRING" },
+            mechanism: { type: "STRING" },
+            immediateVerdict: { type: "STRING" },
+          },
+          required: ["oneLiner", "coreProblem", "targetUser", "mechanism", "immediateVerdict"],
+        },
+        marketDemand: {
+          type: "OBJECT",
+          properties: {
+            score: { type: "NUMBER" },
+            signals: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  signalType: { type: "STRING" },
+                  label: { type: "STRING" },
+                  strength: { type: "STRING" },
+                  whatItSuggests: { type: "STRING" },
+                },
+                required: ["signalType", "label", "strength", "whatItSuggests"],
+              },
+            },
+            keyInsight: { type: "STRING" },
+            recommendedAction: { type: "STRING" },
+          },
+          required: ["score", "signals", "keyInsight", "recommendedAction"],
+        },
+        consumerProblems: {
+          type: "OBJECT",
+          properties: {
+            score: { type: "NUMBER" },
+            items: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  problem: { type: "STRING" },
+                  rootCause: { type: "STRING" },
+                  currentFix: { type: "STRING" },
+                  gap: { type: "STRING" },
+                },
+                required: ["problem", "rootCause", "currentFix", "gap"],
+              },
+            },
+            keyInsight: { type: "STRING" },
+            recommendedAction: { type: "STRING" },
+          },
+          required: ["score", "items", "keyInsight", "recommendedAction"],
+        },
+        competitors: {
+          type: "OBJECT",
+          properties: {
+            score: { type: "NUMBER" },
+            direct: { type: "ARRAY", items: { type: "OBJECT", properties: { brand: { type: "STRING" }, category: { type: "STRING" }, priceRange: { type: "STRING" }, whatWorks: { type: "STRING" }, weakness: { type: "STRING" }, relevance: { type: "STRING" } }, required: ["brand", "category", "priceRange", "whatWorks", "weakness", "relevance"] } },
+            indirect: { type: "ARRAY", items: { type: "OBJECT", properties: { brand: { type: "STRING" }, category: { type: "STRING" }, priceRange: { type: "STRING" }, whatWorks: { type: "STRING" }, weakness: { type: "STRING" }, relevance: { type: "STRING" } }, required: ["brand", "category", "priceRange", "whatWorks", "weakness", "relevance"] } },
+            substitutes: { type: "ARRAY", items: { type: "OBJECT", properties: { brand: { type: "STRING" }, category: { type: "STRING" }, priceRange: { type: "STRING" }, whatWorks: { type: "STRING" }, weakness: { type: "STRING" }, relevance: { type: "STRING" } }, required: ["brand", "category", "priceRange", "whatWorks", "weakness", "relevance"] } },
+            marketProof: { type: "STRING" },
+            whiteSpaceOpportunity: { type: "STRING" },
+            recommendedAction: { type: "STRING" },
+          },
+          required: ["score", "direct", "indirect", "substitutes", "marketProof", "whiteSpaceOpportunity", "recommendedAction"],
+        },
+        popularProducts: {
+          type: "OBJECT",
+          properties: {
+            score: { type: "NUMBER" },
+            items: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  productType: { type: "STRING" },
+                  example: { type: "STRING" },
+                  whyItSells: { type: "STRING" },
+                  priceRange: { type: "STRING" },
+                  repeatPurchasePotential: { type: "STRING" },
+                  fitForIdea: { type: "STRING" },
+                },
+                required: ["productType", "example", "whyItSells", "priceRange", "repeatPurchasePotential", "fitForIdea"],
+              },
+            },
+            bestFitsForThisIdea: { type: "ARRAY", items: { type: "STRING" } },
+            avoidForNow: { type: "ARRAY", items: { type: "STRING" } },
+            recommendedAction: { type: "STRING" },
+          },
+          required: ["score", "items", "bestFitsForThisIdea", "avoidForNow", "recommendedAction"],
+        },
+        mechanismValidation: {
+          type: "OBJECT",
+          properties: {
+            score: { type: "NUMBER" },
+            mechanism: { type: "STRING" },
+            practicalImplication: { type: "STRING" },
+            productTranslation: { type: "ARRAY", items: { type: "STRING" } },
+            claimRisk: { type: "STRING" },
+          },
+          required: ["score", "mechanism", "practicalImplication", "productTranslation", "claimRisk"],
+        },
+        productArchitecture: {
+          type: "OBJECT",
+          properties: {
+            score: { type: "NUMBER" },
+            recommendedCoreProduct: { type: "STRING" },
+            supportingProducts: { type: "ARRAY", items: { type: "STRING" } },
+            bundleIdea: { type: "STRING" },
+            starterBoxRecommendation: { type: "STRING" },
+            beautyProductRecommendations: { type: "ARRAY", items: { type: "STRING" } },
+            repeatPurchaseEngine: { type: "STRING" },
+            avoid: { type: "ARRAY", items: { type: "STRING" } },
+            recommendedAction: { type: "STRING" },
+          },
+          required: ["score", "recommendedCoreProduct", "supportingProducts", "bundleIdea", "starterBoxRecommendation", "beautyProductRecommendations", "repeatPurchaseEngine", "avoid", "recommendedAction"],
+        },
+        pricing: {
+          type: "OBJECT",
+          properties: {
+            score: { type: "NUMBER" },
+            tiers: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  tier: { type: "STRING" },
+                  typicalOffer: { type: "STRING" },
+                  priceRange: { type: "STRING" },
+                  strategicComment: { type: "STRING" },
+                },
+                required: ["tier", "typicalOffer", "priceRange", "strategicComment"],
+              },
+            },
+            recommendedPricePosition: { type: "STRING" },
+            whyThisRangeWorks: { type: "STRING" },
+            firstTestPrice: { type: "STRING" },
+          },
+          required: ["score", "tiers", "recommendedPricePosition", "whyThisRangeWorks", "firstTestPrice"],
+        },
+        distribution: {
+          type: "OBJECT",
+          properties: {
+            score: { type: "NUMBER" },
+            channels: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  channel: { type: "STRING" },
+                  whyItWorks: { type: "STRING" },
+                  fitForIdea: { type: "STRING" },
+                  priority: { type: "NUMBER" },
+                },
+                required: ["channel", "whyItWorks", "fitForIdea", "priority"],
+              },
+            },
+            goToMarketSequence: { type: "ARRAY", items: { type: "STRING" } },
+            recommendedAction: { type: "STRING" },
+          },
+          required: ["score", "channels", "goToMarketSequence", "recommendedAction"],
+        },
+        marketingAngles: {
+          type: "OBJECT",
+          properties: {
+            score: { type: "NUMBER" },
+            angles: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  angle: { type: "STRING" },
+                  whyItResonates: { type: "STRING" },
+                  bestAudience: { type: "STRING" },
+                  bestChannel: { type: "STRING" },
+                },
+                required: ["angle", "whyItResonates", "bestAudience", "bestChannel"],
+              },
+            },
+            bestPrimaryAngle: { type: "STRING" },
+            bestSecondaryAngle: { type: "STRING" },
+            recommendedAction: { type: "STRING" },
+          },
+          required: ["score", "angles", "bestPrimaryAngle", "bestSecondaryAngle", "recommendedAction"],
+        },
+        positioning: {
+          type: "OBJECT",
+          properties: {
+            emotional: { type: "STRING" },
+            functional: { type: "STRING" },
+            category: { type: "STRING" },
+            positioningStatement: { type: "STRING" },
+          },
+          required: ["emotional", "functional", "category", "positioningStatement"],
+        },
+        aAndO: {
+          type: "OBJECT",
+          properties: {
+            alles: { type: "ARRAY", items: { type: "STRING" } },
+            ohne: { type: "ARRAY", items: { type: "STRING" } },
+            recommendedAction: { type: "STRING" },
+          },
+          required: ["alles", "ohne", "recommendedAction"],
+        },
+        usp: {
+          type: "OBJECT",
+          properties: {
+            recommendedUSP: { type: "STRING" },
+            whyItIsStrong: { type: "STRING" },
+            whyHardToCopy: { type: "STRING" },
+            activation: {
+              type: "OBJECT",
+              properties: {
+                packaging: { type: "STRING" },
+                landingPage: { type: "STRING" },
+                ads: { type: "STRING" },
+              },
+              required: ["packaging", "landingPage", "ads"],
+            },
+          },
+          required: ["recommendedUSP", "whyItIsStrong", "whyHardToCopy", "activation"],
+        },
+        opportunityScore: {
+          type: "OBJECT",
+          properties: {
+            overallScore: { type: "NUMBER" },
+            dimensions: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  dimension: { type: "STRING" },
+                  score: { type: "NUMBER" },
+                  reason: { type: "STRING" },
+                },
+                required: ["dimension", "score", "reason"],
+              },
+            },
+            whatWouldIncreaseScore: { type: "ARRAY", items: { type: "STRING" } },
+          },
+          required: ["overallScore", "dimensions", "whatWouldIncreaseScore"],
+        },
+        founderActionPlan: {
+          type: "ARRAY",
+          items: {
+            type: "OBJECT",
+            properties: {
+              week: { type: "STRING" },
+              objective: { type: "STRING" },
+              keyActions: { type: "ARRAY", items: { type: "STRING" } },
+              expectedOutput: { type: "STRING" },
+            },
+            required: ["week", "objective", "keyActions", "expectedOutput"],
+          },
+        },
+        topRecommendations: { type: "ARRAY", items: { type: "STRING" } },
+      },
+      required: ["reportTitle", "ideaName", "ideaSummary", "marketDemand", "consumerProblems", "competitors", "popularProducts", "mechanismValidation", "productArchitecture", "pricing", "distribution", "marketingAngles", "positioning", "aAndO", "usp", "opportunityScore", "founderActionPlan", "topRecommendations"],
+    };
+
     const payload = {
       contents: [{ parts: [{ text: query }] }],
       systemInstruction: { parts: [{ text: systemPrompt }] },
       generationConfig: {
         responseMimeType: "application/json",
-        responseSchema: schema
+        responseSchema: mode === "idea" ? ideaSchema : websiteSchema
       }
     };
 
@@ -135,15 +407,14 @@ const App = () => {
       payload.tools = [{ "google_search": {} }];
     }
 
-    try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-goog-api-key': apiKey,
-        },
-        body: JSON.stringify(payload)
-      });
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-goog-api-key': apiKey,
+      },
+      body: JSON.stringify(payload)
+    });
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -152,7 +423,7 @@ const App = () => {
         try {
           const errorData = JSON.parse(errorText);
           errorMessage = errorData.error?.message || errorMessage;
-        } catch (e) {
+        } catch {
           errorMessage = errorText || errorMessage;
         }
 
@@ -162,66 +433,105 @@ const App = () => {
             modelIndex < modelCandidates.length - 1) {
           const nextModel = modelCandidates[modelIndex + 1];
           console.warn(`Model '${model}' unavailable. Retrying with '${nextModel}'...`);
-          return callGemini(query, retryCount, useSearch, modelIndex + 1);
+          return callGemini(query, mode, retryCount, useSearch, modelIndex + 1);
         }
 
         // Fallback: If the API rejects JSON schema + search tools, retry without search.
         if ((response.status === 400 || response.status === 401 || response.status === 403) && useSearch) {
           console.warn(`Search tool rejected with ${response.status}. Retrying without search...`, errorMessage);
-          return callGemini(query, retryCount, false, modelIndex);
+          return callGemini(query, mode, retryCount, false, modelIndex);
         }
 
         if (response.status === 429 || response.status >= 500) {
           if (retryCount < 5) {
             const delay = Math.pow(2, retryCount) * 1000;
             await new Promise(resolve => setTimeout(resolve, delay));
-            return callGemini(query, retryCount + 1, useSearch, modelIndex);
+            return callGemini(query, mode, retryCount + 1, useSearch, modelIndex);
           }
         }
         
         throw new Error(errorMessage);
       }
 
-      const data = await response.json();
-      let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      
-      if (!text) throw new Error("Empty response from intelligence core.");
-      
-      text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      
-      try {
-        return JSON.parse(text);
-      } catch (parseError) {
-        console.error("Malformed AI Output:", text);
-        throw new Error("Intelligence synthesis produced malformed data. Please retry.");
-      }
-    } catch (err) {
-      throw err;
+    const data = await response.json();
+    let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!text) throw new Error("Empty response from intelligence core.");
+
+    text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      console.error("Malformed AI Output:", text);
+      throw new Error("Intelligence synthesis produced malformed data. Please retry.");
     }
   };
 
   const handleStartAnalysis = async () => {
-    if (!formData.url) return;
+    if (auditMode === 'website' && !formData.url) return;
+    if (auditMode === 'idea' && !formData.ideaDescription) return;
     setStep('loading');
     setError(null);
+    setAnalysisProgress(0);
 
-    const userQuery = `Conduct a rigorous, McKinsey-style strategic analysis on this business:
-    URL: ${formData.url}
-    Type: ${formData.businessType}
-    Monthly Revenue: ${formData.revenue || "Not specified"}
-    Main Challenge: ${formData.challenge || "Unknown"}
-    
-    Structure the output to provide:
-    1. An exact, short overview of what they do.
-    2. Architecture Analysis: 2 strengths vs 2 areas for immediate improvement.
-    3. Search Strategy: 3-4 SEO keywords they should dominate.
-    4. SCO (Search Context Optimization): What AI/Semantic context is missing from their footprint.
-    5. Actionable Ad Campaign: The specific next marketing campaign they need to launch.
-    6. Market Reality: Their top 3 direct competitors.
-    7. Competitor Ad Intelligence: Describe one specific, high-performing Meta/Facebook ad from a top competitor, explain strategically why the creative works, and analyze the strategy of its destination link/landing page.`;
+    const websiteQuery = `Conduct a rigorous, McKinsey-style strategic analysis on this business:
+URL: ${formData.url}
+Type: ${formData.businessType || "Not specified"}
+Monthly Revenue: ${formData.revenue || "Not specified"}
+Main Challenge: ${formData.challenge || "Unknown"}
+
+Structure the output to provide:
+1. An exact, short overview of what they do.
+2. Architecture Analysis: 2 strengths vs 2 areas for immediate improvement.
+3. Search Strategy: 3-4 SEO keywords they should dominate.
+4. SCO (Search Context Optimization): What AI/Semantic context is missing from their footprint.
+5. Actionable Ad Campaign: The specific next marketing campaign they need to launch.
+6. Market Reality: Their top 3 direct competitors.
+7. Competitor Ad Intelligence: Describe one specific, high-performing Meta/Facebook ad from a top competitor, explain strategically why the creative works, and analyze the strategy of its destination link/landing page.`;
+
+    const ideaQuery = `You are a senior AI Product Intelligence Architect building the Idea Intelligence layer.
+
+Return ONLY valid JSON following the exact response schema already enforced by the API responseSchema.
+Do not return markdown. Do not return prose outside JSON.
+
+Quality rules:
+- UI-first, founder-facing, action-driven
+- compact, scannable, commercially useful
+- include concrete competitor/product/channel signals
+- avoid generic consultant language
+- scores must be integers from 1 to 10
+- do not leave any required field empty
+- research globally (US, EU, UK, MENA, APAC) and synthesize cross-market patterns
+
+Decision focus:
+1) Is this worth building?
+2) What to build first?
+3) Which competitors matter?
+4) What is already working?
+5) Where is white-space?
+6) How to position and commercialize?
+7) What are next 30-day actions?
+
+Additional mandatory output logic:
+- productArchitecture.starterBoxRecommendation must be specific (exact box concept + included SKUs)
+- productArchitecture.beautyProductRecommendations must list best-fit beauty/cosmetic extensions when relevant (or practical adjacent self-care products)
+- in competitors/popularProducts include globally relevant brands and products, not just one geography
+
+Special handling for sleep/wellness/ritual ideas:
+- prioritize non-digital sleep support, ritual products, thermal regulation, calming sensory products, bedtime consumables
+- include relevant brand landscape, winning product combos, likely winning messages
+
+Input:
+- ideaName: ${formData.ideaDescription}
+- ideaDescription: ${formData.ideaDescription}
+- market: ${formData.targetMarket || "Not specified"}
+- audience: ${formData.targetAudience || "Not specified"}
+- category: ${formData.productCategory || "Not specified"}
+- priceRangeHint: ${formData.priceRange || "Not specified"}`;
 
     try {
-      const result = await callGemini(userQuery);
+      const result = await callGemini(auditMode === 'idea' ? ideaQuery : websiteQuery, auditMode);
       setAnalysisResult(result);
       
       if (analysisProgress < 100) {
@@ -252,7 +562,7 @@ const App = () => {
       }, 100);
       return () => clearInterval(interval);
     }
-  }, [step]);
+  }, [step, analysisProgress]);
 
   // --- UI Components ---
 
@@ -289,20 +599,45 @@ const App = () => {
         LUAZ designs and deploys data-driven systems that transform operations into autonomous growth engines.
       </p>
       
+      <div className="flex gap-2 mb-5 opacity-0 animate-fadeIn" style={{ animationDelay: '0.75s', animationFillMode: 'forwards' }}>
+        <button
+          onClick={() => setAuditMode('website')}
+          className={`px-4 py-2 rounded-md text-xs uppercase tracking-widest border transition-all ${auditMode === 'website' ? 'bg-[#1D3557] text-[#F5F3EF] border-[#1D3557]' : 'bg-white/50 text-[#1D3557] border-[#1D3557]/20'}`}
+        >
+          Audit Website
+        </button>
+        <button
+          onClick={() => setAuditMode('idea')}
+          className={`px-4 py-2 rounded-md text-xs uppercase tracking-widest border transition-all ${auditMode === 'idea' ? 'bg-[#1D3557] text-[#F5F3EF] border-[#1D3557]' : 'bg-white/50 text-[#1D3557] border-[#1D3557]/20'}`}
+        >
+          Audit Idea
+        </button>
+      </div>
+
       <div className="w-full max-w-2xl bg-white/40 p-2 rounded-lg border border-[#A3B18A]/30 backdrop-blur-sm shadow-sm opacity-0 animate-fadeIn" style={{ animationDelay: '0.8s', animationFillMode: 'forwards' }}>
         <div className="flex flex-col md:flex-row gap-2">
-          <input 
-            type="text" 
-            placeholder="Enter your business URL..."
-            className="flex-1 px-6 py-4 bg-transparent outline-none text-[#1D3557] font-light placeholder:text-[#1D3557]/40"
-            value={formData.url}
-            onChange={(e) => setFormData({...formData, url: e.target.value})}
-          />
+          {auditMode === 'website' ? (
+            <input
+              type="text"
+              placeholder="Enter your business URL..."
+              className="flex-1 px-6 py-4 bg-transparent outline-none text-[#1D3557] font-light placeholder:text-[#1D3557]/40"
+              value={formData.url}
+              onChange={(e) => setFormData({...formData, url: e.target.value})}
+            />
+          ) : (
+            <input
+              type="text"
+              placeholder="Enter your startup idea in one sentence..."
+              className="flex-1 px-6 py-4 bg-transparent outline-none text-[#1D3557] font-light placeholder:text-[#1D3557]/40"
+              value={formData.ideaDescription}
+              onChange={(e) => setFormData({...formData, ideaDescription: e.target.value})}
+            />
+          )}
           <button 
             onClick={() => setStep('input')}
             className="bg-[#1D3557] text-[#F5F3EF] px-8 py-4 rounded-md text-sm font-medium tracking-widest uppercase hover:bg-[#1D3557]/90 transition-all flex items-center justify-center gap-2 group"
           >
-            Initiate Scan
+            {auditMode === 'idea' ? 'Initiate Idea Audit' : 'Initiate Scan'}
             <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
@@ -313,8 +648,25 @@ const App = () => {
   const InputForm = () => (
     <div className="flex flex-col items-center justify-center min-h-screen px-4 animate-fadeIn">
       <div className="w-full max-w-xl bg-white p-12 rounded-2xl shadow-xl shadow-[#1D3557]/5">
-        <h2 className="text-3xl font-serif text-[#1D3557] mb-2 text-center">Contextualizing Intelligence</h2>
+        <h2 className="text-3xl font-serif text-[#1D3557] mb-2 text-center">
+          {auditMode === 'idea' ? 'Strategic Idea Intelligence' : 'Contextualizing Intelligence'}
+        </h2>
         <p className="text-sm text-[#1D3557]/60 mb-10 text-center uppercase tracking-widest font-medium">Step 02 / 05</p>
+
+        <div className="flex gap-2 mb-8 justify-center">
+          <button
+            onClick={() => setAuditMode('website')}
+            className={`px-3 py-2 rounded-md text-[10px] uppercase tracking-widest border ${auditMode === 'website' ? 'bg-[#1D3557] text-[#F5F3EF] border-[#1D3557]' : 'text-[#1D3557] border-[#1D3557]/20'}`}
+          >
+            Audit Website
+          </button>
+          <button
+            onClick={() => setAuditMode('idea')}
+            className={`px-3 py-2 rounded-md text-[10px] uppercase tracking-widest border ${auditMode === 'idea' ? 'bg-[#1D3557] text-[#F5F3EF] border-[#1D3557]' : 'text-[#1D3557] border-[#1D3557]/20'}`}
+          >
+            Audit Idea
+          </button>
+        </div>
         
         {error && <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-800 text-xs rounded flex items-center gap-2">
           <AlertCircle size={14} className="shrink-0" /> 
@@ -322,49 +674,119 @@ const App = () => {
         </div>}
 
         <div className="space-y-6">
-          <div>
-            <label className="block text-[10px] uppercase tracking-widest mb-2 font-bold text-[#1D3557]/60">Business Type</label>
-            <select 
-              className="w-full bg-[#F5F3EF] p-4 rounded-md border-none focus:ring-2 focus:ring-[#A3B18A]/50 outline-none text-[#1D3557]"
-              value={formData.businessType}
-              onChange={(e) => setFormData({...formData, businessType: e.target.value})}
-            >
-              <option value="">Select Sector</option>
-              <option value="ecommerce">E-commerce / D2C</option>
-              <option value="saas">SaaS / Tech</option>
-              <option value="sme">SME (Germany)</option>
-              <option value="investor">Investor / Portfolio</option>
-            </select>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[10px] uppercase tracking-widest mb-2 font-bold text-[#1D3557]/60 text-left">Monthly Revenue (Optional)</label>
-              <input 
-                type="text" 
-                placeholder="e.g. 50k - 100k"
-                className="w-full bg-[#F5F3EF] p-4 rounded-md outline-none focus:ring-2 focus:ring-[#A3B18A]/50 text-[#1D3557]"
-                value={formData.revenue}
-                onChange={(e) => setFormData({...formData, revenue: e.target.value})}
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] uppercase tracking-widest mb-2 font-bold text-[#1D3557]/60 text-left">Primary Friction</label>
-              <input 
-                type="text" 
-                placeholder="e.g. Scaling CAC"
-                className="w-full bg-[#F5F3EF] p-4 rounded-md outline-none focus:ring-2 focus:ring-[#A3B18A]/50 text-[#1D3557]"
-                value={formData.challenge}
-                onChange={(e) => setFormData({...formData, challenge: e.target.value})}
-              />
-            </div>
-          </div>
+          {auditMode === 'website' ? (
+            <>
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest mb-2 font-bold text-[#1D3557]/60">Business URL</label>
+                <input
+                  type="text"
+                  placeholder="https://your-business.com"
+                  className="w-full bg-[#F5F3EF] p-4 rounded-md outline-none focus:ring-2 focus:ring-[#A3B18A]/50 text-[#1D3557]"
+                  value={formData.url}
+                  onChange={(e) => setFormData({...formData, url: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest mb-2 font-bold text-[#1D3557]/60">Business Type</label>
+                <select
+                  className="w-full bg-[#F5F3EF] p-4 rounded-md border-none focus:ring-2 focus:ring-[#A3B18A]/50 outline-none text-[#1D3557]"
+                  value={formData.businessType}
+                  onChange={(e) => setFormData({...formData, businessType: e.target.value})}
+                >
+                  <option value="">Select Sector</option>
+                  <option value="ecommerce">E-commerce / D2C</option>
+                  <option value="saas">SaaS / Tech</option>
+                  <option value="sme">SME (Germany)</option>
+                  <option value="investor">Investor / Portfolio</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] uppercase tracking-widest mb-2 font-bold text-[#1D3557]/60 text-left">Monthly Revenue (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 50k - 100k"
+                    className="w-full bg-[#F5F3EF] p-4 rounded-md outline-none focus:ring-2 focus:ring-[#A3B18A]/50 text-[#1D3557]"
+                    value={formData.revenue}
+                    onChange={(e) => setFormData({...formData, revenue: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase tracking-widest mb-2 font-bold text-[#1D3557]/60 text-left">Primary Friction</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Scaling CAC"
+                    className="w-full bg-[#F5F3EF] p-4 rounded-md outline-none focus:ring-2 focus:ring-[#A3B18A]/50 text-[#1D3557]"
+                    value={formData.challenge}
+                    onChange={(e) => setFormData({...formData, challenge: e.target.value})}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest mb-2 font-bold text-[#1D3557]/60">Idea Description</label>
+                <textarea
+                  rows={4}
+                  placeholder="Describe the startup idea clearly."
+                  className="w-full bg-[#F5F3EF] p-4 rounded-md outline-none focus:ring-2 focus:ring-[#A3B18A]/50 text-[#1D3557]"
+                  value={formData.ideaDescription}
+                  onChange={(e) => setFormData({...formData, ideaDescription: e.target.value})}
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] uppercase tracking-widest mb-2 font-bold text-[#1D3557]/60">Target Market / Geography</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. DACH / EU / US"
+                    className="w-full bg-[#F5F3EF] p-4 rounded-md outline-none focus:ring-2 focus:ring-[#A3B18A]/50 text-[#1D3557]"
+                    value={formData.targetMarket}
+                    onChange={(e) => setFormData({...formData, targetMarket: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase tracking-widest mb-2 font-bold text-[#1D3557]/60">Target Audience (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Busy professionals 25-45"
+                    className="w-full bg-[#F5F3EF] p-4 rounded-md outline-none focus:ring-2 focus:ring-[#A3B18A]/50 text-[#1D3557]"
+                    value={formData.targetAudience}
+                    onChange={(e) => setFormData({...formData, targetAudience: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] uppercase tracking-widest mb-2 font-bold text-[#1D3557]/60">Price Range (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. €29-€49"
+                    className="w-full bg-[#F5F3EF] p-4 rounded-md outline-none focus:ring-2 focus:ring-[#A3B18A]/50 text-[#1D3557]"
+                    value={formData.priceRange}
+                    onChange={(e) => setFormData({...formData, priceRange: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase tracking-widest mb-2 font-bold text-[#1D3557]/60">Product Category (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Wellness / SaaS / Consumer"
+                    className="w-full bg-[#F5F3EF] p-4 rounded-md outline-none focus:ring-2 focus:ring-[#A3B18A]/50 text-[#1D3557]"
+                    value={formData.productCategory}
+                    onChange={(e) => setFormData({...formData, productCategory: e.target.value})}
+                  />
+                </div>
+              </div>
+            </>
+          )}
 
           <button 
             onClick={handleStartAnalysis}
             className="w-full mt-8 bg-[#A3B18A] text-[#F5F3EF] py-5 rounded-md text-sm font-bold tracking-widest uppercase hover:bg-[#8f9d78] transition-all"
           >
-            Execute Strategic Audit
+            {auditMode === 'idea' ? 'Execute Idea Intelligence Report' : 'Execute Strategic Audit'}
           </button>
         </div>
       </div>
@@ -597,6 +1019,170 @@ const App = () => {
     </div>
   );
 
+  const IdeaResultsDashboard = () => {
+    const r = analysisResult || {};
+    const scoreCards = [
+      ["Market", r.marketDemand?.score],
+      ["Problem", r.consumerProblems?.score],
+      ["Competitors", r.competitors?.score],
+      ["Products", r.popularProducts?.score],
+      ["Mechanism", r.mechanismValidation?.score],
+      ["Architecture", r.productArchitecture?.score],
+      ["Pricing", r.pricing?.score],
+      ["Distribution", r.distribution?.score],
+      ["Angles", r.marketingAngles?.score],
+      ["Overall", r.opportunityScore?.overallScore],
+    ];
+
+    const compRow = (c, idx) => (
+      <tr key={`${c.brand}-${idx}`} className="border-b last:border-0 border-[#1D3557]/10">
+        <td className="py-2 pr-2 text-xs font-semibold">{c.brand}</td>
+        <td className="py-2 pr-2 text-xs">{c.category}</td>
+        <td className="py-2 pr-2 text-xs">{c.priceRange}</td>
+        <td className="py-2 pr-2 text-xs">{c.relevance}</td>
+        <td className="py-2 text-xs text-[#1D3557]/75">{c.weakness}</td>
+      </tr>
+    );
+
+    return (
+      <div className="min-h-screen pt-32 pb-20 px-4 md:px-12 animate-fadeIn max-w-6xl mx-auto space-y-6">
+        <div className="border-b border-[#1D3557]/10 pb-8">
+          <h2 className="text-4xl font-serif text-[#1D3557] mb-2">{r.reportTitle || "Strategic Intelligence Report"}</h2>
+          <p className="text-[#1D3557]/60 font-light">
+            Idea audit complete for <span className="font-medium">{r.ideaName || formData.ideaDescription || "provided concept"}</span>
+          </p>
+        </div>
+
+        <section className="bg-white p-6 rounded-xl border border-[#1D3557]/5 shadow-sm">
+          <h3 className="text-xs uppercase tracking-widest text-[#1D3557]/60 font-bold mb-3">Idea Summary</h3>
+          <div className="grid md:grid-cols-2 gap-4 text-sm text-[#1D3557]/85">
+            <p><span className="font-semibold">One-liner:</span> {r.ideaSummary?.oneLiner || "N/A"}</p>
+            <p><span className="font-semibold">Core problem:</span> {r.ideaSummary?.coreProblem || "N/A"}</p>
+            <p><span className="font-semibold">Target user:</span> {r.ideaSummary?.targetUser || "N/A"}</p>
+            <p><span className="font-semibold">Mechanism:</span> {r.ideaSummary?.mechanism || "N/A"}</p>
+          </div>
+          <p className="mt-3 text-sm"><span className="font-semibold">Immediate verdict:</span> {r.ideaSummary?.immediateVerdict || "N/A"}</p>
+        </section>
+
+        <section className="bg-[#1D3557] text-white p-6 rounded-xl shadow-sm">
+          <h3 className="text-xs uppercase tracking-widest text-white/65 font-bold mb-4">Scoreboard</h3>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {scoreCards.map(([k, v]) => (
+              <div key={k} className="bg-white/10 rounded-md p-3">
+                <p className="text-[10px] uppercase tracking-widest text-white/70">{k}</p>
+                <p className="text-2xl font-bold">{v ?? "N/A"}/10</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="bg-white p-6 rounded-xl border border-[#1D3557]/5 shadow-sm">
+          <h3 className="text-xs uppercase tracking-widest text-[#1D3557]/60 font-bold mb-3">Market Demand Signals</h3>
+          <div className="space-y-2">
+            {(r.marketDemand?.signals || []).map((s, i) => (
+              <div key={i} className="p-3 rounded-md bg-[#F5F3EF]/70 text-sm">
+                <span className="font-semibold">{s.signalType}:</span> {s.label} <span className="uppercase text-[10px] ml-2 px-2 py-0.5 rounded bg-[#1D3557]/10">{s.strength}</span>
+                <p className="text-xs text-[#1D3557]/70 mt-1">{s.whatItSuggests}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-sm"><span className="font-semibold">Action:</span> {r.marketDemand?.recommendedAction || "N/A"}</p>
+        </section>
+
+        <section className="bg-white p-6 rounded-xl border border-[#1D3557]/5 shadow-sm">
+          <h3 className="text-xs uppercase tracking-widest text-[#1D3557]/60 font-bold mb-3">Competitor Intelligence</h3>
+          <div className="space-y-5">
+            {[["Direct", r.competitors?.direct || []], ["Indirect", r.competitors?.indirect || []], ["Substitutes", r.competitors?.substitutes || []]].map(([name, rows]) => (
+              <div key={name} className="bg-[#F5F3EF]/35 p-4 rounded-md">
+                <h4 className="font-semibold text-sm mb-2">{name}</h4>
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-[10px] uppercase tracking-widest text-[#1D3557]/55">
+                      <th className="text-left py-1">Brand</th><th className="text-left py-1">Cat</th><th className="text-left py-1">Price</th><th className="text-left py-1">Rel</th><th className="text-left py-1">Gap</th>
+                    </tr>
+                  </thead>
+                  <tbody>{rows.map(compRow)}</tbody>
+                </table>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-sm"><span className="font-semibold">White-space:</span> {r.competitors?.whiteSpaceOpportunity || "N/A"}</p>
+          <p className="mt-1 text-sm"><span className="font-semibold">Action:</span> {r.competitors?.recommendedAction || "N/A"}</p>
+        </section>
+
+        <section className="bg-white p-6 rounded-xl border border-[#1D3557]/5 shadow-sm">
+          <h3 className="text-xs uppercase tracking-widest text-[#1D3557]/60 font-bold mb-3">Popular Product Intelligence</h3>
+          <div className="space-y-2">
+            {(r.popularProducts?.items || []).map((p, i) => (
+              <div key={i} className="p-3 rounded-md bg-[#F5F3EF]/70">
+                <p className="text-sm font-semibold">{p.productType} <span className="font-normal text-[#1D3557]/70">({p.example})</span></p>
+                <p className="text-xs text-[#1D3557]/70">{p.whyItSells} | {p.priceRange} | Repeat: {p.repeatPurchasePotential} | Fit: {p.fitForIdea}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-sm"><span className="font-semibold">Best fits:</span> {(r.popularProducts?.bestFitsForThisIdea || []).join(", ") || "N/A"}</p>
+        </section>
+
+        <section className="grid md:grid-cols-2 gap-4">
+          <div className="bg-white p-6 rounded-xl border border-[#1D3557]/5 shadow-sm">
+            <h3 className="text-xs uppercase tracking-widest text-[#1D3557]/60 font-bold mb-3">Product Architecture</h3>
+            <p className="text-sm"><span className="font-semibold">Core:</span> {r.productArchitecture?.recommendedCoreProduct || "N/A"}</p>
+            <p className="text-sm mt-2"><span className="font-semibold">Bundle:</span> {r.productArchitecture?.bundleIdea || "N/A"}</p>
+            <p className="text-sm mt-2"><span className="font-semibold">Starter box:</span> {r.productArchitecture?.starterBoxRecommendation || "N/A"}</p>
+            <p className="text-sm mt-2"><span className="font-semibold">Repeat engine:</span> {r.productArchitecture?.repeatPurchaseEngine || "N/A"}</p>
+            <p className="text-sm mt-2"><span className="font-semibold">Action:</span> {r.productArchitecture?.recommendedAction || "N/A"}</p>
+          </div>
+          <div className="bg-white p-6 rounded-xl border border-[#1D3557]/5 shadow-sm">
+            <h3 className="text-xs uppercase tracking-widest text-[#1D3557]/60 font-bold mb-3">Pricing & Positioning</h3>
+            <p className="text-sm"><span className="font-semibold">Recommended price:</span> {r.pricing?.recommendedPricePosition || "N/A"}</p>
+            <p className="text-sm mt-2"><span className="font-semibold">First test price:</span> {r.pricing?.firstTestPrice || "N/A"}</p>
+            <p className="text-sm mt-2"><span className="font-semibold">Positioning statement:</span> {r.positioning?.positioningStatement || "N/A"}</p>
+          </div>
+        </section>
+
+        <section className="bg-white p-6 rounded-xl border border-[#1D3557]/5 shadow-sm">
+          <h3 className="text-xs uppercase tracking-widest text-[#1D3557]/60 font-bold mb-3">Beauty / Adjacent Product Recommendations</h3>
+          <ul className="space-y-2">
+            {(r.productArchitecture?.beautyProductRecommendations || []).map((x, i) => (
+              <li key={i} className="text-sm">• {x}</li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="bg-white p-6 rounded-xl border border-[#1D3557]/5 shadow-sm">
+          <h3 className="text-xs uppercase tracking-widest text-[#1D3557]/60 font-bold mb-3">30-Day Founder Action Plan</h3>
+          <table className="w-full">
+            <thead>
+              <tr className="text-[10px] uppercase tracking-widest text-[#1D3557]/55 border-b border-[#1D3557]/10">
+                <th className="text-left py-2">Week</th>
+                <th className="text-left py-2">Objective</th>
+                <th className="text-left py-2">Key Actions</th>
+                <th className="text-left py-2">Expected Output</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(r.founderActionPlan || []).map((w, i) => (
+                <tr key={i} className="border-b last:border-0 border-[#1D3557]/10">
+                  <td className="py-3 pr-2 text-xs font-semibold">{w.week}</td>
+                  <td className="py-3 pr-2 text-xs">{w.objective}</td>
+                  <td className="py-3 pr-2 text-xs">{(w.keyActions || []).join(" | ")}</td>
+                  <td className="py-3 text-xs">{w.expectedOutput}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+
+        <section className="bg-white p-6 rounded-xl border border-[#1D3557]/5 shadow-sm">
+          <h3 className="text-xs uppercase tracking-widest text-[#1D3557]/60 font-bold mb-3">Top Recommendations</h3>
+          <ul className="space-y-2">
+            {(r.topRecommendations || []).map((x, i) => <li key={i} className="text-sm">• {x}</li>)}
+          </ul>
+        </section>
+      </div>
+    );
+  };
+
   const ContactForm = () => (
     <div className="flex flex-col items-center justify-center min-h-screen px-4 animate-fadeIn">
       <div className="w-full max-w-xl bg-white p-12 rounded-2xl shadow-2xl">
@@ -660,7 +1246,7 @@ const App = () => {
         {step === 'hero' && Hero()}
         {step === 'input' && InputForm()}
         {step === 'loading' && LoadingScreen()}
-        {step === 'results' && ResultsDashboard()}
+        {step === 'results' && (auditMode === 'idea' ? IdeaResultsDashboard() : ResultsDashboard())}
         {step === 'contact' && ContactForm()}
         {step === 'success' && SuccessScreen()}
       </main>
