@@ -18,7 +18,8 @@ import {
   BrainCircuit,
   Swords,
   CheckCircle,
-  Megaphone
+  Megaphone,
+  Plane
 } from 'lucide-react';
 
 const App = () => {
@@ -393,12 +394,189 @@ const App = () => {
       required: ["reportTitle", "ideaName", "ideaSummary", "marketDemand", "consumerProblems", "competitors", "popularProducts", "mechanismValidation", "productArchitecture", "pricing", "distribution", "marketingAngles", "positioning", "aAndO", "usp", "opportunityScore", "founderActionPlan", "topRecommendations"],
     };
 
+    const financialSchema = {
+      type: "OBJECT",
+      properties: {
+        reportTitle: { type: "STRING" },
+        website: { type: "STRING" },
+        entityResolution: {
+          type: "OBJECT",
+          properties: {
+            matchedEntityName: { type: "STRING" },
+            legalForm: { type: "STRING" },
+            registerCourt: { type: "STRING" },
+            registerNumber: { type: "STRING" },
+            vatId: { type: "STRING" },
+            lei: { type: "STRING" },
+            address: { type: "STRING" },
+            managingDirectors: { type: "ARRAY", items: { type: "STRING" } },
+            impressumFound: { type: "BOOLEAN" },
+            impressumUrl: { type: "STRING" },
+            matchConfidence: { type: "STRING" },
+            matchStatus: { type: "STRING" },
+            explanation: { type: "STRING" }
+          },
+          required: ["matchedEntityName", "legalForm", "registerCourt", "registerNumber", "vatId", "lei", "address", "managingDirectors", "impressumFound", "impressumUrl", "matchConfidence", "matchStatus", "explanation"]
+        },
+        sourceCoverage: {
+          type: "OBJECT",
+          properties: {
+            officialRegisterSources: { type: "ARRAY", items: { type: "STRING" } },
+            officialCompanySources: { type: "ARRAY", items: { type: "STRING" } },
+            mediaSources: { type: "ARRAY", items: { type: "STRING" } },
+            secondarySources: { type: "ARRAY", items: { type: "STRING" } },
+            coverageQuality: { type: "STRING" },
+            coverageGaps: { type: "ARRAY", items: { type: "STRING" } }
+          },
+          required: ["officialRegisterSources", "officialCompanySources", "mediaSources", "secondarySources", "coverageQuality", "coverageGaps"]
+        },
+        officialFilingCoverage: {
+          type: "OBJECT",
+          properties: {
+            annualAccountsFound: { type: "BOOLEAN" },
+            latestFilingPeriod: { type: "STRING" },
+            filingFreshness: { type: "STRING" },
+            filingCompleteness: { type: "STRING" },
+            notes: { type: "STRING" }
+          },
+          required: ["annualAccountsFound", "latestFilingPeriod", "filingFreshness", "filingCompleteness", "notes"]
+        },
+        financialSignals: {
+          type: "ARRAY",
+          items: {
+            type: "OBJECT",
+            properties: {
+              metric: { type: "STRING" },
+              value: { type: "STRING" },
+              period: { type: "STRING" },
+              sourceType: { type: "STRING" },
+              sourceName: { type: "STRING" },
+              confidence: { type: "STRING" },
+              evidenceLevel: { type: "STRING" },
+              comment: { type: "STRING" }
+            },
+            required: ["metric", "value", "period", "sourceType", "sourceName", "confidence", "evidenceLevel", "comment"]
+          }
+        },
+        ownershipAndGovernance: {
+          type: "OBJECT",
+          properties: {
+            currentOwner: { type: "STRING" },
+            ownershipSignal: { type: "STRING" },
+            managementChanges: { type: "ARRAY", items: { type: "STRING" } },
+            governanceNotes: { type: "STRING" },
+            confidence: { type: "STRING" }
+          },
+          required: ["currentOwner", "ownershipSignal", "managementChanges", "governanceNotes", "confidence"]
+        },
+        riskFlags: {
+          type: "ARRAY",
+          items: {
+            type: "OBJECT",
+            properties: {
+              flag: { type: "STRING" },
+              severity: { type: "STRING" },
+              whyItMatters: { type: "STRING" },
+              sourceType: { type: "STRING" },
+              sourceName: { type: "STRING" },
+              confidence: { type: "STRING" }
+            },
+            required: ["flag", "severity", "whyItMatters", "sourceType", "sourceName", "confidence"]
+          }
+        },
+        stabilitySignals: {
+          type: "ARRAY",
+          items: {
+            type: "OBJECT",
+            properties: {
+              signal: { type: "STRING" },
+              strength: { type: "STRING" },
+              whyItMatters: { type: "STRING" }
+            },
+            required: ["signal", "strength", "whyItMatters"]
+          }
+        },
+        timeline: {
+          type: "ARRAY",
+          items: {
+            type: "OBJECT",
+            properties: {
+              dateOrPeriod: { type: "STRING" },
+              event: { type: "STRING" },
+              type: { type: "STRING" },
+              importance: { type: "STRING" }
+            },
+            required: ["dateOrPeriod", "event", "type", "importance"]
+          }
+        },
+        scores: {
+          type: "OBJECT",
+          properties: {
+            entityTrustScore: { type: "NUMBER" },
+            disclosureQualityScore: { type: "NUMBER" },
+            operatingStabilityScore: { type: "NUMBER" },
+            growthSignalScore: { type: "NUMBER" },
+            distressSignalScore: { type: "NUMBER" },
+            investorRelevanceScore: { type: "NUMBER" },
+            bankabilityScore: { type: "NUMBER" }
+          },
+          required: ["entityTrustScore", "disclosureQualityScore", "operatingStabilityScore", "growthSignalScore", "distressSignalScore", "investorRelevanceScore", "bankabilityScore"]
+        },
+        investorTake: {
+          type: "OBJECT",
+          properties: {
+            oneLineView: { type: "STRING" },
+            mostAttractiveSignal: { type: "STRING" },
+            primaryConcern: { type: "STRING" },
+            bestFitUseCase: { type: "STRING" },
+            recommendedNextStep: { type: "STRING" }
+          },
+          required: ["oneLineView", "mostAttractiveSignal", "primaryConcern", "bestFitUseCase", "recommendedNextStep"]
+        },
+        bankLens: {
+          type: "OBJECT",
+          properties: {
+            creditView: { type: "STRING" },
+            underwritingCaution: { type: "STRING" },
+            documentationStrength: { type: "STRING" },
+            recommendedNextCheck: { type: "STRING" }
+          },
+          required: ["creditView", "underwritingCaution", "documentationStrength", "recommendedNextCheck"]
+        },
+        dataIntegrity: {
+          type: "OBJECT",
+          properties: {
+            officialDataShare: { type: "STRING" },
+            nonOfficialDataShare: { type: "STRING" },
+            highConfidencePoints: { type: "NUMBER" },
+            mediumConfidencePoints: { type: "NUMBER" },
+            lowConfidencePoints: { type: "NUMBER" },
+            mainUncertainties: { type: "ARRAY", items: { type: "STRING" } }
+          },
+          required: ["officialDataShare", "nonOfficialDataShare", "highConfidencePoints", "mediumConfidencePoints", "lowConfidencePoints", "mainUncertainties"]
+        },
+        financialExecutiveSummary: {
+          type: "OBJECT",
+          properties: {
+            overallSummary: { type: "STRING" },
+            financialStrengths: { type: "ARRAY", items: { type: "STRING" } },
+            financialWeaknesses: { type: "ARRAY", items: { type: "STRING" } },
+            profitabilitySignal: { type: "STRING" },
+            profitabilityComment: { type: "STRING" }
+          },
+          required: ["overallSummary", "financialStrengths", "financialWeaknesses", "profitabilitySignal", "profitabilityComment"]
+        },
+        topRecommendations: { type: "ARRAY", items: { type: "STRING" } }
+      },
+      required: ["reportTitle", "website", "entityResolution", "sourceCoverage", "officialFilingCoverage", "financialSignals", "ownershipAndGovernance", "riskFlags", "stabilitySignals", "timeline", "scores", "investorTake", "bankLens", "dataIntegrity", "financialExecutiveSummary", "topRecommendations"]
+    };
+
     const payload = {
       contents: [{ parts: [{ text: query }] }],
       systemInstruction: { parts: [{ text: systemPrompt }] },
       generationConfig: {
         responseMimeType: "application/json",
-        responseSchema: mode === "idea" ? ideaSchema : websiteSchema
+        responseSchema: mode === "idea" ? ideaSchema : mode === "financial" ? financialSchema : websiteSchema
       }
     };
 
@@ -469,8 +647,16 @@ const App = () => {
   };
 
   const handleStartAnalysis = async () => {
-    if (auditMode === 'website' && !formData.url) return;
-    if (auditMode === 'idea' && !formData.ideaDescription) return;
+    if (auditMode === 'website' && !formData.url.trim()) {
+      setError("Please enter a valid website URL to start the audit.");
+      setStep('hero');
+      return;
+    }
+    if (auditMode === 'idea' && !formData.ideaDescription.trim()) {
+      setError("Please enter an idea description to start the audit.");
+      setStep('input');
+      return;
+    }
     setStep('loading');
     setError(null);
     setAnalysisProgress(0);
@@ -489,6 +675,54 @@ Structure the output to provide:
 5. Actionable Ad Campaign: The specific next marketing campaign they need to launch.
 6. Market Reality: Their top 3 direct competitors.
 7. Competitor Ad Intelligence: Describe one specific, high-performing Meta/Facebook ad from a top competitor, explain strategically why the creative works, and analyze the strategy of its destination link/landing page.`;
+
+    const financialQuery = `You are a senior Financial Intelligence Architect building the "Financial Laser" layer for LUAZ Labs.
+
+Website: ${formData.url}
+Business Type Hint: ${formData.businessType || "Not specified"}
+
+Core objective:
+- Build investor-grade and bank-grade company intelligence from Impressum/legal notice and public sources.
+- Maximize accuracy, source transparency, and decision usefulness.
+
+Hard rules:
+1) Never present inferred values as official facts.
+2) Every important point must include value, period, sourceType, sourceName, confidence, evidenceLevel.
+3) Separate official data from non-official or inferred.
+4) If entity match is ambiguous, state it clearly.
+5) Prefer precision over completeness.
+6) If metric unavailable, mark unavailable (do not invent).
+7) Keep strings concise and UI-ready.
+
+Source priority (strict):
+1. official_register (Handelsregister, Unternehmensregister, Bundesanzeiger, BRIS, insolvency register, LEI/GLEIF)
+2. official_company_disclosure (annual report, IR page, official PR)
+3. reputable_primary_media
+4. secondary_database
+5. inferred
+
+Germany/EU emphasis:
+- Prioritize Impressum extraction and legal form consistency
+- Register court + register number identity
+- Filing coverage recency and completeness
+- Insolvency/restructuring signals
+- VAT/LEI consistency
+- Ownership and management changes
+
+Scoring:
+- return integers 1..10
+- distressSignalScore: higher means more distress (worse)
+- do not smooth scores artificially
+
+Mandatory summary block:
+- Fill financialExecutiveSummary with:
+  - overallSummary (compact top-line summary for decision-makers)
+  - financialStrengths (2-4 bullets)
+  - financialWeaknesses (2-4 bullets)
+  - profitabilitySignal (e.g., strong | moderate | weak | unknown)
+  - profitabilityComment (what source-backed profitability signal exists or why unavailable)
+
+Return only valid JSON matching the required schema.`;
 
     const ideaQuery = `You are a senior AI Product Intelligence Architect building the Idea Intelligence layer.
 
@@ -531,8 +765,109 @@ Input:
 - priceRangeHint: ${formData.priceRange || "Not specified"}`;
 
     try {
-      const result = await callGemini(auditMode === 'idea' ? ideaQuery : websiteQuery, auditMode);
-      setAnalysisResult(result);
+      if (auditMode === 'website') {
+        const [websiteResult, financialIntel] = await Promise.all([
+          callGemini(websiteQuery, 'website'),
+          callGemini(financialQuery, 'financial').catch((intelError) => {
+            console.warn("Financial intel fetch failed:", intelError);
+            return {
+              reportTitle: "Financial Laser Report",
+              website: formData.url || "Not found",
+              entityResolution: {
+                matchedEntityName: "Not found",
+                legalForm: "Not found",
+                registerCourt: "Not found",
+                registerNumber: "Not found",
+                vatId: "Not found",
+                lei: "Not found",
+                address: "Not found",
+                managingDirectors: ["Not found"],
+                impressumFound: false,
+                impressumUrl: "Not found",
+                matchConfidence: "low",
+                matchStatus: "no_match",
+                explanation: "Financial Laser lookup failed during this run."
+              },
+              sourceCoverage: {
+                officialRegisterSources: [],
+                officialCompanySources: [],
+                mediaSources: [],
+                secondarySources: [],
+                coverageQuality: "low",
+                coverageGaps: ["Financial source scan failed during this run."]
+              },
+              officialFilingCoverage: {
+                annualAccountsFound: false,
+                latestFilingPeriod: "unknown",
+                filingFreshness: "unknown",
+                filingCompleteness: "unknown",
+                notes: "No filing data due to failed enrichment run."
+              },
+              financialSignals: [],
+              ownershipAndGovernance: {
+                currentOwner: "Not found",
+                ownershipSignal: "Not found",
+                managementChanges: [],
+                governanceNotes: "Not available in this run.",
+                confidence: "low"
+              },
+              riskFlags: [{
+                flag: "Financial source scan failed",
+                severity: "medium",
+                whyItMatters: "No bank/investor-grade validation can be completed without source data.",
+                sourceType: "inferred",
+                sourceName: "Runtime fallback",
+                confidence: "low"
+              }],
+              stabilitySignals: [],
+              timeline: [],
+              scores: {
+                entityTrustScore: 1,
+                disclosureQualityScore: 1,
+                operatingStabilityScore: 1,
+                growthSignalScore: 1,
+                distressSignalScore: 1,
+                investorRelevanceScore: 1,
+                bankabilityScore: 1
+              },
+              investorTake: {
+                oneLineView: "Insufficient data for investor-grade view.",
+                mostAttractiveSignal: "None",
+                primaryConcern: "Source coverage unavailable.",
+                bestFitUseCase: "watchlist_only",
+                recommendedNextStep: "Retry scan and verify legal entity mapping first."
+              },
+              bankLens: {
+                creditView: "Insufficient data for credit view.",
+                underwritingCaution: "No reliable filings available in this run.",
+                documentationStrength: "Weak",
+                recommendedNextCheck: "Re-run with confirmed entity from Impressum."
+              },
+              dataIntegrity: {
+                officialDataShare: "0%",
+                nonOfficialDataShare: "100%",
+                highConfidencePoints: 0,
+                mediumConfidencePoints: 0,
+                lowConfidencePoints: 1,
+                mainUncertainties: ["Entity and filings could not be resolved."]
+              },
+              financialExecutiveSummary: {
+                overallSummary: "Insufficient verified data for a reliable financial summary.",
+                financialStrengths: ["No verified strengths available in this run."],
+                financialWeaknesses: ["Entity and filing coverage unresolved."],
+                profitabilitySignal: "unknown",
+                profitabilityComment: "No source-backed profitability data available."
+              },
+              topRecommendations: ["Retry with a valid domain and verify Impressum identity."]
+            };
+          }),
+        ]);
+
+        setAnalysisResult({ ...websiteResult, financialIntel });
+      } else {
+        const result = await callGemini(ideaQuery, 'idea');
+        setAnalysisResult(result);
+      }
       
       if (analysisProgress < 100) {
         const interval = setInterval(() => {
@@ -551,7 +886,7 @@ Input:
     } catch (err) {
       console.error(err);
       setError(`Analysis Interrupted: ${err.message}`);
-      setStep('input');
+      setStep(auditMode === 'website' ? 'hero' : 'input');
     }
   };
 
@@ -634,20 +969,26 @@ Input:
             />
           )}
           <button 
-            onClick={() => setStep('input')}
+            onClick={auditMode === 'website' ? handleStartAnalysis : () => setStep('input')}
             className="bg-[#1D3557] text-[#F5F3EF] px-8 py-4 rounded-md text-sm font-medium tracking-widest uppercase hover:bg-[#1D3557]/90 transition-all flex items-center justify-center gap-2 group"
           >
-            {auditMode === 'idea' ? 'Initiate Idea Audit' : 'Initiate Scan'}
+            {auditMode === 'idea' ? 'Initiate Idea Audit' : 'Run Website Audit'}
             <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
       </div>
+      {error && (
+        <div className="mt-4 max-w-2xl w-full p-3 bg-red-50 border border-red-100 text-red-800 text-xs rounded flex items-center gap-2">
+          <AlertCircle size={14} className="shrink-0" />
+          <span className="truncate" title={error}>{error}</span>
+        </div>
+      )}
     </div>
   );
 
   const InputForm = () => (
     <div className="flex flex-col items-center justify-center min-h-screen px-4 animate-fadeIn">
-      <div className="w-full max-w-xl bg-white p-12 rounded-2xl shadow-xl shadow-[#1D3557]/5">
+      <div className="w-full max-w-xl p-12">
         <h2 className="text-3xl font-serif text-[#1D3557] mb-2 text-center">
           {auditMode === 'idea' ? 'Strategic Idea Intelligence' : 'Contextualizing Intelligence'}
         </h2>
@@ -793,39 +1134,88 @@ Input:
     </div>
   );
 
-  const LoadingScreen = () => (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4">
-      <div className="w-full max-w-md text-center">
-        <div className="mb-12 relative">
-          <div className="w-24 h-24 border-2 border-[#A3B18A]/20 border-t-[#1D3557] rounded-full animate-spin mx-auto"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-mono text-xs font-bold text-[#1D3557]">
-            {Math.round(analysisProgress)}%
-          </div>
-        </div>
-        
-        <h2 className="text-xl font-serif text-[#1D3557] mb-4">Compiling Strategic Briefing...</h2>
-        
-        <div className="h-px w-full bg-[#1D3557]/10 mb-6 overflow-hidden">
-          <div 
-            className="h-full bg-[#1D3557] transition-all duration-300" 
-            style={{ width: `${analysisProgress}%` }}
-          />
-        </div>
+  const LoadingScreen = () => {
+    const progress = Math.round(analysisProgress);
+    const clampedProgress = Math.min(Math.max(progress, 4), 96);
+    const statusText =
+      analysisProgress < 20 ? "Analyzing market positioning..." :
+      analysisProgress < 40 ? "Evaluating architecture strengths and vulnerabilities..." :
+      analysisProgress < 60 ? "Extracting semantic and contextual search gaps..." :
+      analysisProgress < 80 ? "Formulating acquisition strategy..." :
+      "Benchmarking direct market competitors...";
 
-        <div className="space-y-2 h-4 overflow-hidden">
-          <p className="text-[10px] font-mono text-[#1D3557]/40 uppercase tracking-tighter animate-pulse">
-            {analysisProgress < 20 && ">> Analyzing market positioning..."}
-            {analysisProgress >= 20 && analysisProgress < 40 && ">> Evaluating architectural strengths and vulnerabilities..."}
-            {analysisProgress >= 40 && analysisProgress < 60 && ">> Extracting semantic and contextual search gaps..."}
-            {analysisProgress >= 60 && analysisProgress < 80 && ">> Formulating optimal acquisition strategy..."}
-            {analysisProgress >= 80 && ">> Identifying direct market competitors..."}
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen px-4">
+        <div className="w-full max-w-3xl text-center">
+          <div className="mb-6 inline-flex items-center gap-2 border border-[#1D3557]/15 rounded-full px-4 py-2 bg-white/70 backdrop-blur-sm">
+            <span className="w-2 h-2 rounded-full bg-[#A3B18A] animate-blinkDot" />
+            <span className="text-[10px] font-mono tracking-[0.18em] uppercase text-[#1D3557]/70">Intelligence Core Active</span>
+          </div>
+
+          <h2 className="text-2xl md:text-3xl font-serif text-[#1D3557] mb-2">Compiling Strategic Briefing</h2>
+          <p className="text-sm text-[#1D3557]/60 mb-10">Live synthesis is running across market, positioning, competitors, and growth signals.</p>
+
+          <div className="relative mx-auto mb-10 max-w-2xl rounded-2xl border border-[#1D3557]/10 bg-white/60 p-6 md:p-8 overflow-hidden">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(163,177,138,0.16),transparent_45%),radial-gradient(circle_at_80%_80%,rgba(29,53,87,0.14),transparent_50%)]" />
+
+            <div className="relative h-28">
+              <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-[2px] bg-gradient-to-r from-[#1D3557]/0 via-[#1D3557]/35 to-[#1D3557]/0" />
+              <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-[2px] border-t border-dashed border-[#1D3557]/25" />
+              <div
+                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2"
+                style={{ left: `${clampedProgress}%` }}
+              >
+                <div className="relative">
+                  <div className="absolute -inset-3 rounded-full bg-[#A3B18A]/30 animate-pulseGlow" />
+                  <div className="relative w-11 h-11 rounded-full bg-[#1D3557] text-[#F5F3EF] flex items-center justify-center shadow-lg animate-floatY">
+                    <Plane size={16} className="rotate-45" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-left">
+                <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-[#1D3557]/45">Start</p>
+              </div>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-right">
+                <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-[#1D3557]/45">Delivery</p>
+              </div>
+            </div>
+
+            <div className="relative mt-2">
+              <div className="h-2 w-full rounded-full bg-[#1D3557]/10 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[#1D3557] via-[#355178] to-[#A3B18A] animate-shimmerBar"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <div className="flex justify-between mt-3 text-xs font-mono">
+                <span className="text-[#1D3557]/55">SYNTHESIS PROGRESS</span>
+                <span className="font-bold text-[#1D3557]">{progress}%</span>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-[11px] font-mono uppercase tracking-[0.14em] text-[#1D3557]/65 animate-pulse mb-3">
+            {`>> ${statusText}`}
           </p>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
-  const ResultsDashboard = () => (
+  const ResultsDashboard = () => {
+    const fi = analysisResult?.financialIntel || {};
+    const financialScores = [
+      ["Entity Trust", fi?.scores?.entityTrustScore],
+      ["Disclosure", fi?.scores?.disclosureQualityScore],
+      ["Stability", fi?.scores?.operatingStabilityScore],
+      ["Growth", fi?.scores?.growthSignalScore],
+      ["Distress", fi?.scores?.distressSignalScore],
+      ["Investor", fi?.scores?.investorRelevanceScore],
+      ["Bankability", fi?.scores?.bankabilityScore],
+    ];
+
+    return (
     <div className="min-h-screen pt-32 pb-20 px-4 md:px-12 animate-fadeIn max-w-5xl mx-auto">
       
       {/* Header Area */}
@@ -1000,6 +1390,251 @@ Input:
         </div>
       </div>
 
+      {/* 6. Financial Laser */}
+      <div className="bg-white p-8 rounded-xl border border-[#1D3557]/5 shadow-sm mb-12">
+        <div className="flex items-center gap-3 mb-6 text-[#1D3557] border-b border-[#1D3557]/5 pb-4">
+          <div className="w-10 h-10 bg-[#1D3557]/10 rounded-full flex items-center justify-center text-[#1D3557]">
+            <Database size={20} />
+          </div>
+          <div>
+            <h3 className="text-xl font-serif font-bold">{fi?.reportTitle || "Financial Laser Report"}</h3>
+            <p className="text-xs text-[#1D3557]/60">Investor-grade + bank-grade legal and financial intelligence layer</p>
+          </div>
+        </div>
+
+        <div className="bg-[#1D3557] text-[#F5F3EF] p-6 rounded-xl mb-6">
+          <p className="text-[10px] uppercase tracking-widest opacity-70 mb-2">Top Financial Summary</p>
+          <p className="text-sm md:text-base leading-relaxed">{fi?.financialExecutiveSummary?.overallSummary || "No financial summary available."}</p>
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white/10 rounded-lg p-3">
+              <p className="text-[10px] uppercase tracking-widest opacity-70 mb-2">Strengths</p>
+              <ul className="space-y-1">
+                {(fi?.financialExecutiveSummary?.financialStrengths || []).map((x, i) => (
+                  <li key={i} className="text-xs">• {x}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="bg-white/10 rounded-lg p-3">
+              <p className="text-[10px] uppercase tracking-widest opacity-70 mb-2">Weaknesses</p>
+              <ul className="space-y-1">
+                {(fi?.financialExecutiveSummary?.financialWeaknesses || []).map((x, i) => (
+                  <li key={i} className="text-xs">• {x}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="bg-white/10 rounded-lg p-3">
+              <p className="text-[10px] uppercase tracking-widest opacity-70 mb-2">Profitability View</p>
+              <p className="text-sm font-semibold">{fi?.financialExecutiveSummary?.profitabilitySignal || "unknown"}</p>
+              <p className="text-xs mt-1 opacity-90">{fi?.financialExecutiveSummary?.profitabilityComment || "No profitability signal available."}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div className="bg-[#1D3557] text-[#F5F3EF] rounded-lg p-3">
+            <p className="text-[10px] uppercase tracking-widest opacity-70">Match Status</p>
+            <p className="text-sm font-semibold">{fi?.entityResolution?.matchStatus || "unknown"}</p>
+          </div>
+          <div className="bg-[#1D3557] text-[#F5F3EF] rounded-lg p-3">
+            <p className="text-[10px] uppercase tracking-widest opacity-70">Match Confidence</p>
+            <p className="text-sm font-semibold">{fi?.entityResolution?.matchConfidence || "unknown"}</p>
+          </div>
+          <div className="bg-[#1D3557] text-[#F5F3EF] rounded-lg p-3">
+            <p className="text-[10px] uppercase tracking-widest opacity-70">Coverage Quality</p>
+            <p className="text-sm font-semibold">{fi?.sourceCoverage?.coverageQuality || "unknown"}</p>
+          </div>
+          <div className="bg-[#1D3557] text-[#F5F3EF] rounded-lg p-3">
+            <p className="text-[10px] uppercase tracking-widest opacity-70">Filing Freshness</p>
+            <p className="text-sm font-semibold">{fi?.officialFilingCoverage?.filingFreshness || "unknown"}</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="bg-[#F5F3EF]/60 p-4 rounded-lg border border-[#1D3557]/10">
+            <p className="text-[10px] uppercase tracking-widest text-[#1D3557]/55 mb-1">Entity</p>
+            <p className="text-sm font-semibold text-[#1D3557]">{fi?.entityResolution?.matchedEntityName || "Not found"}</p>
+            <p className="text-xs text-[#1D3557]/70 mt-1">{fi?.entityResolution?.legalForm || "Not found"}</p>
+            <p className="text-xs text-[#1D3557]/70 mt-1">Register: {fi?.entityResolution?.registerCourt || "Not found"} {fi?.entityResolution?.registerNumber || ""}</p>
+            <p className="text-xs text-[#1D3557]/70 mt-1">VAT: {fi?.entityResolution?.vatId || "Not found"} | LEI: {fi?.entityResolution?.lei || "Not found"}</p>
+          </div>
+          <div className="bg-[#F5F3EF]/60 p-4 rounded-lg border border-[#1D3557]/10">
+            <p className="text-[10px] uppercase tracking-widest text-[#1D3557]/55 mb-1">Impressum & Management</p>
+            <p className="text-xs text-[#1D3557]/70">Impressum found: {fi?.entityResolution?.impressumFound ? "yes" : "no"}</p>
+            <p className="text-xs text-[#1D3557]/70 mt-1">Address: {fi?.entityResolution?.address || "Not found"}</p>
+            <p className="text-xs text-[#1D3557]/70 mt-1">Managing directors: {(fi?.entityResolution?.managingDirectors || []).join(", ") || "Not found"}</p>
+            {fi?.entityResolution?.impressumUrl && fi?.entityResolution?.impressumUrl !== "Not found" && (
+              <a href={fi.entityResolution.impressumUrl} target="_blank" rel="noreferrer" className="text-xs underline text-[#1D3557] mt-2 inline-block break-all">
+                Impressum source
+              </a>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-[#F5F3EF]/40 p-4 rounded-lg border border-[#1D3557]/10 mb-6">
+          <p className="text-[10px] uppercase tracking-widest text-[#1D3557]/55 mb-2">Entity Resolution Note</p>
+          <p className="text-sm text-[#1D3557]/80">{fi?.entityResolution?.explanation || "No resolution note available."}</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white p-4 rounded-lg border border-[#1D3557]/10">
+            <p className="text-[10px] uppercase tracking-widest text-[#1D3557]/55 mb-2">Official Register Sources</p>
+            <ul className="space-y-1">
+              {(fi?.sourceCoverage?.officialRegisterSources || []).map((x, i) => <li key={i} className="text-xs text-[#1D3557]/80">• {x}</li>)}
+            </ul>
+          </div>
+          <div className="bg-white p-4 rounded-lg border border-[#1D3557]/10">
+            <p className="text-[10px] uppercase tracking-widest text-[#1D3557]/55 mb-2">Company + Media Sources</p>
+            <ul className="space-y-1">
+              {(fi?.sourceCoverage?.officialCompanySources || []).map((x, i) => <li key={i} className="text-xs text-[#1D3557]/80">• {x}</li>)}
+              {(fi?.sourceCoverage?.mediaSources || []).map((x, i) => <li key={`m-${i}`} className="text-xs text-[#1D3557]/80">• {x}</li>)}
+            </ul>
+          </div>
+          <div className="bg-white p-4 rounded-lg border border-[#1D3557]/10">
+            <p className="text-[10px] uppercase tracking-widest text-[#1D3557]/55 mb-2">Coverage Gaps</p>
+            <ul className="space-y-1">
+              {(fi?.sourceCoverage?.coverageGaps || []).map((x, i) => <li key={i} className="text-xs text-[#1D3557]/80">• {x}</li>)}
+            </ul>
+          </div>
+        </div>
+
+        <div className="bg-[#1D3557] text-[#F5F3EF] p-5 rounded-lg mb-6">
+          <p className="text-[10px] uppercase tracking-widest opacity-70 mb-2">Official Filing Coverage</p>
+          <p className="text-sm">Annual accounts found: {fi?.officialFilingCoverage?.annualAccountsFound ? "yes" : "no"}</p>
+          <p className="text-sm mt-1">Latest period: {fi?.officialFilingCoverage?.latestFilingPeriod || "unknown"}</p>
+          <p className="text-sm mt-1">Completeness: {fi?.officialFilingCoverage?.filingCompleteness || "unknown"}</p>
+          <p className="text-xs opacity-80 mt-2">{fi?.officialFilingCoverage?.notes || ""}</p>
+        </div>
+
+        <div className="mb-6 overflow-auto">
+          <p className="text-[10px] font-mono text-[#1D3557]/50 uppercase tracking-widest mb-2">Financial Metrics</p>
+          <table className="w-full min-w-[760px]">
+            <thead>
+              <tr className="text-[10px] uppercase tracking-widest text-[#1D3557]/55 border-b border-[#1D3557]/10">
+                <th className="text-left py-2">Metric</th>
+                <th className="text-left py-2">Value</th>
+                <th className="text-left py-2">Period</th>
+                <th className="text-left py-2">Source Type</th>
+                <th className="text-left py-2">Source</th>
+                <th className="text-left py-2">Conf.</th>
+                <th className="text-left py-2">Evidence</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(fi?.financialSignals || []).map((item, i) => (
+                <tr key={i} className="border-b border-[#1D3557]/10 last:border-0">
+                  <td className="py-2 pr-2 text-xs font-semibold">{item.metric}</td>
+                  <td className="py-2 pr-2 text-xs">{item.value}</td>
+                  <td className="py-2 pr-2 text-xs">{item.period}</td>
+                  <td className="py-2 pr-2 text-xs">{item.sourceType}</td>
+                  <td className="py-2 pr-2 text-xs">{item.sourceName}</td>
+                  <td className="py-2 pr-2 text-xs">{item.confidence}</td>
+                  <td className="py-2 text-xs">{item.evidenceLevel}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {(fi?.financialSignals || []).length === 0 && (
+            <p className="text-sm text-[#1D3557]/70 mt-2">No source-backed metrics in this run.</p>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="bg-white p-4 rounded-lg border border-[#1D3557]/10">
+            <p className="text-[10px] uppercase tracking-widest text-[#1D3557]/55 mb-2">Ownership & Governance</p>
+            <p className="text-sm text-[#1D3557]/85">Owner: {fi?.ownershipAndGovernance?.currentOwner || "Not found"}</p>
+            <p className="text-sm text-[#1D3557]/85 mt-1">Signal: {fi?.ownershipAndGovernance?.ownershipSignal || "Not found"}</p>
+            <p className="text-xs text-[#1D3557]/70 mt-2">{fi?.ownershipAndGovernance?.governanceNotes || ""}</p>
+          </div>
+          <div className="bg-white p-4 rounded-lg border border-[#1D3557]/10">
+            <p className="text-[10px] uppercase tracking-widest text-[#1D3557]/55 mb-2">Management Changes</p>
+            <ul className="space-y-1">
+              {(fi?.ownershipAndGovernance?.managementChanges || []).map((x, i) => <li key={i} className="text-sm text-[#1D3557]/80">• {x}</li>)}
+            </ul>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="bg-red-50/60 p-4 rounded-lg border border-red-900/10">
+            <p className="text-[10px] uppercase tracking-widest text-[#1D3557]/55 mb-2">Risk Radar</p>
+            <ul className="space-y-2">
+              {(fi?.riskFlags || []).map((r, i) => (
+                <li key={i} className="text-sm text-[#1D3557]/85">
+                  <span className="font-semibold">[{r.severity}]</span> {r.flag} - {r.whyItMatters}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="bg-[#F5F3EF]/60 p-4 rounded-lg border border-[#1D3557]/10">
+            <p className="text-[10px] uppercase tracking-widest text-[#1D3557]/55 mb-2">Stability Signals</p>
+            <ul className="space-y-2">
+              {(fi?.stabilitySignals || []).map((s, i) => (
+                <li key={i} className="text-sm text-[#1D3557]/85">
+                  <span className="font-semibold">[{s.strength}]</span> {s.signal} - {s.whyItMatters}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <p className="text-[10px] uppercase tracking-widest text-[#1D3557]/55 mb-2">Timeline</p>
+          <div className="space-y-2">
+            {(fi?.timeline || []).map((t, i) => (
+              <div key={i} className="bg-white p-3 rounded-md border border-[#1D3557]/10 text-sm text-[#1D3557]/85">
+                <span className="font-semibold">{t.dateOrPeriod}</span> - {t.event} <span className="text-xs text-[#1D3557]/60">({t.type}, {t.importance})</span>
+              </div>
+            ))}
+            {(fi?.timeline || []).length === 0 && <p className="text-sm text-[#1D3557]/70">No timeline items returned.</p>}
+          </div>
+        </div>
+
+        <div className="bg-[#1D3557] text-[#F5F3EF] p-5 rounded-lg mb-6">
+          <p className="text-[10px] uppercase tracking-widest opacity-70 mb-3">Score Dashboard</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {financialScores.map(([k, v]) => (
+              <div key={k} className="bg-white/10 rounded-md p-3">
+                <p className="text-[10px] uppercase tracking-widest opacity-70">{k}</p>
+                <p className="text-xl font-bold">{v ?? "N/A"}/10</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="bg-white p-4 rounded-lg border border-[#1D3557]/10">
+            <p className="text-[10px] uppercase tracking-widest text-[#1D3557]/55 mb-2">Investor Take</p>
+            <p className="text-sm text-[#1D3557]/85">{fi?.investorTake?.oneLineView || "N/A"}</p>
+            <p className="text-xs text-[#1D3557]/75 mt-2">Attractive: {fi?.investorTake?.mostAttractiveSignal || "N/A"}</p>
+            <p className="text-xs text-[#1D3557]/75 mt-1">Concern: {fi?.investorTake?.primaryConcern || "N/A"}</p>
+            <p className="text-xs text-[#1D3557]/75 mt-1">Use case: {fi?.investorTake?.bestFitUseCase || "N/A"}</p>
+            <p className="text-xs text-[#1D3557]/75 mt-1">Next: {fi?.investorTake?.recommendedNextStep || "N/A"}</p>
+          </div>
+          <div className="bg-white p-4 rounded-lg border border-[#1D3557]/10">
+            <p className="text-[10px] uppercase tracking-widest text-[#1D3557]/55 mb-2">Bank Lens</p>
+            <p className="text-sm text-[#1D3557]/85">{fi?.bankLens?.creditView || "N/A"}</p>
+            <p className="text-xs text-[#1D3557]/75 mt-2">Caution: {fi?.bankLens?.underwritingCaution || "N/A"}</p>
+            <p className="text-xs text-[#1D3557]/75 mt-1">Documentation: {fi?.bankLens?.documentationStrength || "N/A"}</p>
+            <p className="text-xs text-[#1D3557]/75 mt-1">Next check: {fi?.bankLens?.recommendedNextCheck || "N/A"}</p>
+          </div>
+        </div>
+
+        <div className="bg-[#F5F3EF]/60 p-4 rounded-lg border border-[#1D3557]/10 mb-4">
+          <p className="text-[10px] uppercase tracking-widest text-[#1D3557]/55 mb-2">Data Integrity</p>
+          <p className="text-sm text-[#1D3557]/85">Official share: {fi?.dataIntegrity?.officialDataShare || "N/A"} | Non-official: {fi?.dataIntegrity?.nonOfficialDataShare || "N/A"}</p>
+          <p className="text-xs text-[#1D3557]/75 mt-1">High: {fi?.dataIntegrity?.highConfidencePoints ?? "N/A"} | Medium: {fi?.dataIntegrity?.mediumConfidencePoints ?? "N/A"} | Low: {fi?.dataIntegrity?.lowConfidencePoints ?? "N/A"}</p>
+          <ul className="mt-2 space-y-1">
+            {(fi?.dataIntegrity?.mainUncertainties || []).map((u, i) => <li key={i} className="text-xs text-[#1D3557]/75">• {u}</li>)}
+          </ul>
+        </div>
+
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-[#1D3557]/55 mb-2">Top Recommendations</p>
+          <ul className="space-y-1">
+            {(fi?.topRecommendations || []).map((r, i) => <li key={i} className="text-sm text-[#1D3557]/85">• {r}</li>)}
+          </ul>
+        </div>
+      </div>
+
       {/* The Call to Action */}
       <div className="bg-[#1D3557] p-10 rounded-2xl text-white shadow-xl flex flex-col items-center text-center mb-12">
         <h3 className="text-sm uppercase tracking-[0.2em] font-bold mb-4 opacity-80 text-[#A3B18A]">System Verdict</h3>
@@ -1018,6 +1653,7 @@ Input:
       </div>
     </div>
   );
+  };
 
   const IdeaResultsDashboard = () => {
     const r = analysisResult || {};
@@ -1251,15 +1887,6 @@ Input:
         {step === 'success' && SuccessScreen()}
       </main>
 
-      {/* Decorative elements */}
-      <div className="fixed bottom-12 left-12 hidden lg:block opacity-20 pointer-events-none">
-        <div className="font-mono text-[10px] space-y-1">
-          <p>LUAZ_v2.05_DEPLOYMENT</p>
-          <p>CORE: ACTIVE</p>
-          <p>MODELS: T4/QUANTUM</p>
-        </div>
-      </div>
-
       <style>
         {`
           @keyframes fadeIn {
@@ -1268,6 +1895,35 @@ Input:
           }
           .animate-fadeIn {
             animation: fadeIn 0.8s ease-out forwards;
+          }
+          @keyframes pulseGlow {
+            0%, 100% { transform: scale(0.9); opacity: 0.25; }
+            50% { transform: scale(1.2); opacity: 0.55; }
+          }
+          .animate-pulseGlow {
+            animation: pulseGlow 1.8s ease-in-out infinite;
+          }
+          @keyframes shimmerBar {
+            0% { filter: saturate(0.9) brightness(0.95); }
+            50% { filter: saturate(1.1) brightness(1.05); }
+            100% { filter: saturate(0.9) brightness(0.95); }
+          }
+          .animate-shimmerBar {
+            animation: shimmerBar 1.4s ease-in-out infinite;
+          }
+          @keyframes floatY {
+            0%, 100% { transform: translateY(-1px); }
+            50% { transform: translateY(-5px); }
+          }
+          .animate-floatY {
+            animation: floatY 1.6s ease-in-out infinite;
+          }
+          @keyframes blinkDot {
+            0%, 100% { opacity: 0.35; }
+            50% { opacity: 1; }
+          }
+          .animate-blinkDot {
+            animation: blinkDot 1.2s ease-in-out infinite;
           }
         `}
       </style>
